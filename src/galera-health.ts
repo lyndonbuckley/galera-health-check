@@ -20,7 +20,7 @@ async function main() {
 
         for (const row of rows) {
             const name = row['Variable_name']??null;
-            const value = row['Variable_value']??null;
+            const value = row['Value']??null;
             if (name && value)
                 status[name] = value;
         }
