@@ -17,7 +17,7 @@ const port: number = (() => {
 })();
 
 async function getStatus() {
-    const status: {[key: string]: number} = {};
+    const status: {[key: string]: string} = {};
     let conn;
     try {
         conn = await pool.getConnection();
@@ -46,7 +46,15 @@ const server = createServer(async(req, res) => {
     }
 
     const status = await getStatus();
-    res.writeHead(404, {"Content-Type": "text/plain"});
+
+    const healthy: boolean = (()=>{
+        if (status.local_state_comment !== 'Synced') return false;
+        if (status.cluster_status !== 'Primary') return false;
+        if (status.connected !== 'ON') return false;
+        return status.ready === 'ON';
+    })();
+
+    res.writeHead(healthy ? 200 : 503, {"Content-Type": "text/plain"});
     return res.end(JSON.stringify(status, null, 2));
 });
 
