@@ -36,6 +36,7 @@ async function getStatus() {
 }
 
 const server = createServer(async(req, res) => {
+    console.log(new Date(),req.method, req.url);
     if (req.method !== "GET") {
         res.writeHead(400, {"Content-Type": "text/plain"});
         return res.end("Bad Request");
