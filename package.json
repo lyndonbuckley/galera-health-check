@@ -4,7 +4,8 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node dist/galera-health.js"
   },
   "dependencies": {
     "mariadb": "^3.4.5"
