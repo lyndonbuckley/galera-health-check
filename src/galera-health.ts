@@ -1,4 +1,5 @@
 import {createPool} from "mariadb";
+import {createServer} from "http";
 
 const pool = createPool({
     host: process.env.DB_HOST  || '127.0.0.1',
@@ -8,28 +9,50 @@ const pool = createPool({
     acquireTimeout: 1000,
 });
 
-async function main() {
+const port: number = (() => {
+    if (process.env.DB_PORT && Number(process.env.DB_PORT))
+        return Number(process.env.DB_PORT);
+
+    return 3308;
+})();
+
+async function getStatus() {
+    const status: {[key: string]: number} = {};
     let conn;
     try {
-
         conn = await pool.getConnection();
         const rows = await conn.query("SHOW STATUS LIKE 'wsrep_%'");
-        // rows: [ {val: 1}, meta: ... ]
-
-        const status: {[key: string]: number} = {};
-
         for (const row of rows) {
-            const name = row['Variable_name']??null;
+            const name: string | null = row['Variable_name']??null;
             const value = row['Value']??null;
             if (name && value)
-                status[name] = value;
+                status[name.substring(6)] = value;
         }
-
-        console.log(status);
-
     } finally {
-        if (conn) conn.release(); //release to pool
+        if (conn) conn.release();
+        return status;
     }
 }
 
-main().catch(console.error);
+const server = createServer(async(req, res) => {
+    if (req.method !== "GET") {
+        res.writeHead(400, {"Content-Type": "text/plain"});
+        return res.end("Bad Request");
+    }
+
+    if (req.url !== "/health") {
+        res.writeHead(404, {"Content-Type": "text/plain"});;
+        return res.end("Not Found");
+    }
+
+    const status = await getStatus();
+    res.writeHead(404, {"Content-Type": "text/plain"});
+    return res.end(JSON.stringify(status, null, 2));
+});
+
+server.listen(port,()=>{
+    console.log(`Server listening on port ${port}`);
+});
+server.on("error", (err) => {
+    console.error(err);
+});
