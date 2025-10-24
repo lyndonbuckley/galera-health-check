@@ -16,7 +16,16 @@ async function main() {
         const rows = await conn.query("SHOW STATUS LIKE 'wsrep_%'");
         // rows: [ {val: 1}, meta: ... ]
 
-        console.log(rows);
+        const status: {[key: string]: number} = {};
+
+        for (const row of rows) {
+            const name = row['Variable_name']??null;
+            const value = row['Variable_value']??null;
+            if (name && value)
+                status[name] = value;
+        }
+
+        console.log(status);
 
     } finally {
         if (conn) conn.release(); //release to pool
