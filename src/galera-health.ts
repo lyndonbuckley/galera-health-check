@@ -7,11 +7,12 @@ const pool = createPool({
     connectionLimit: 5,
     connectTimeout: 1000,
     acquireTimeout: 1000,
+    queryTimeout: 1000,
 });
 
 const port: number = (() => {
-    if (process.env.DB_PORT && Number(process.env.DB_PORT))
-        return Number(process.env.DB_PORT);
+    if (process.env.DB_HEALTH_PORT && Number(process.env.DB_HEALTH_PORT))
+        return Number(process.env.DB_HEALTH_PORT);
 
     return 3308;
 })();
@@ -40,7 +41,7 @@ const server = createServer(async(req, res) => {
         return res.end("Bad Request");
     }
 
-    if (req.url !== "/health") {
+    if (req.url !== "/galera") {
         res.writeHead(404, {"Content-Type": "text/plain"});;
         return res.end("Not Found");
     }
